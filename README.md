@@ -186,13 +186,7 @@ To more closely model a production cluster, we're going to add one more OSD daem
 
 ### Add an OSD
 ```console
-vagrant@ceph-admin:~/test-cluster$ ssh ceph-server-1 "sudo mkdir /var/local/osd2 && sudo chown ceph:ceph /var/local/osd2"
-```
-
-Now, from the admin node, we prepare and activate the OSD:
-```console
-vagrant@ceph-admin:~/test-cluster$ ceph-deploy osd prepare ceph-server-1:/var/local/osd2
-vagrant@ceph-admin:~/test-cluster$ ceph-deploy osd activate ceph-server-1:/var/local/osd2
+[vagrant@ceph-admin test-cluster]$ ceph-deploy osd create --data /dev/sdb ceph-server-1
 ```
 
 Watch the rebalancing:
@@ -204,14 +198,21 @@ vagrant@ceph-admin:~/test-cluster$ ceph -w
 You should eventually see it return to an `active+clean` state, but this time with 3 OSDs:
 
 ```console
-vagrant@ceph-admin:~/test-cluster$ ceph -w
-    cluster 18197927-3d77-4064-b9be-bba972b00750
-     health HEALTH_OK
-     monmap e2: 3 mons at {ceph-server-1=172.21.12.12:6789/0,ceph-server-2=172.21.12.13:6789/0,ceph-server-3=172.21.12.14:6789/0}, election epoch 30, quorum 0,1,2 ceph-server-1,ceph-server-2,ceph-server-3
-     osdmap e38: 3 osds: 3 up, 3 in
-      pgmap v415: 192 pgs, 3 pools, 0 bytes data, 0 objects
-            18752 MB used, 97014 MB / 118 GB avail
-                 192 active+clean
+[vagrant@ceph-admin test-cluster]$ ceph -w
+  cluster:
+    id:     c50c41a9-2c74-4d10-b110-c8cb0f8d4305
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum ceph-server-1,ceph-server-2,ceph-server-3
+    mgr: ceph-admin(active)
+    osd: 3 osds: 3 up, 3 in
+
+  data:
+    pools:   0 pools, 0 pgs
+    objects: 0  objects, 0 B
+    usage:   3.0 GiB used, 1.5 TiB / 1.5 TiB avail
+    pgs:
 ```
 
 ### Add metadata server
