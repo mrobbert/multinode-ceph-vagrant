@@ -110,7 +110,7 @@ Note here that we specify the Ceph release we'd like to install, which is [mimic
 vagrant@ceph-admin:~/test-cluster$ ceph-deploy install --release=mimic ceph-admin ceph-server-1 ceph-server-2 ceph-server-3 ceph-client
 ```
 
-## Configure monitor and OSD services
+## Configure monitor, manager, and OSD services
 
 Next, we add a monitor node:
 
@@ -118,21 +118,17 @@ Next, we add a monitor node:
 vagrant@ceph-admin:~/test-cluster$ ceph-deploy mon create-initial
 ```
 
-And our two OSDs. For these, we need to log into the server machines directly:
+A manager node:
 
 ```console
-vagrant@ceph-admin:~/test-cluster$ ssh ceph-server-2 "sudo mkdir /var/local/osd0 && sudo chown ceph:ceph /var/local/osd0"
+ceph-deploy mgr create ceph-admin
 ```
 
-```console
-vagrant@ceph-admin:~/test-cluster$ ssh ceph-server-3 "sudo mkdir /var/local/osd1 && sudo chown ceph:ceph /var/local/osd1"
-```
-
-Now we can prepare and activate the OSDs:
+And our two OSDs:
 
 ```console
-vagrant@ceph-admin:~/test-cluster$ ceph-deploy osd prepare ceph-server-2:/var/local/osd0 ceph-server-3:/var/local/osd1
-vagrant@ceph-admin:~/test-cluster$ ceph-deploy osd activate ceph-server-2:/var/local/osd0 ceph-server-3:/var/local/osd1
+vagrant@ceph-admin:~/test-cluster$ ceph-deploy osd create --data /dev/sdb ceph-server-2
+vagrant@ceph-admin:~/test-cluster$ ceph-deploy osd create --data /dev/sdb ceph-server-3
 ```
 
 ## Configuration and status
@@ -163,17 +159,24 @@ You should see something similar to this once it's healthy:
 ```console
 vagrant@ceph-admin:~/test-cluster$ ceph health
 HEALTH_OK
-vagrant@ceph-admin:~/test-cluster$ ceph -s
-    cluster 18197927-3d77-4064-b9be-bba972b00750
-     health HEALTH_OK
-     monmap e2: 3 mons at {ceph-server-1=172.21.12.12:6789/0,ceph-server-2=172.21.12.13:6789/0,ceph-server-3=172.21.12.14:6789/0}, election epoch 6, quorum 0,1,2 ceph-server-1,ceph-server-2,ceph-server-3
-     osdmap e9: 2 osds: 2 up, 2 in
-      pgmap v13: 192 pgs, 3 pools, 0 bytes data, 0 objects
-            12485 MB used, 64692 MB / 80568 MB avail
-                 192 active+clean
+[vagrant@ceph-admin test-cluster]$ ceph -s
+  cluster:
+    id:     c50c41a9-2c74-4d10-b110-c8cb0f8d4305
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum ceph-server-1,ceph-server-2,ceph-server-3
+    mgr: ceph-admin(active)
+    osd: 2 osds: 2 up, 2 in
+
+  data:
+    pools:   0 pools, 0 pgs
+    objects: 0  objects, 0 B
+    usage:   2.0 GiB used, 998 GiB / 1000 GiB avail
+    pgs:
 ```
 
-Notice that we have two OSDs (`osdmap e9: 2 osds: 2 up, 2 in`) and all of the [placement groups](http://docs.ceph.com/docs/master/rados/operations/placement-groups/) (pgs) are reporting as `active+clean`.
+Notice that we have two OSDs (`osd: 2 osds: 2 up, 2 in`) and all of the [placement groups](http://docs.ceph.com/docs/master/rados/operations/placement-groups/) (pgs) are reporting as `active+clean`.
 
 Congratulations!
 
