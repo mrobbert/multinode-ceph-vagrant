@@ -265,7 +265,55 @@ vagrant@ceph-client:~$ sudo mount /dev/rbd/rbd/foo /mnt/ceph-block-device
 
 ### Create a mount with Ceph FS
 
-TODO
+Create the data and metadata pools
+
+```console
+[vagrant@ceph-admin test-cluster]$ ceph osd pool create cephfs_data 128
+pool 'cephfs_data' created
+[vagrant@ceph-admin test-cluster]$ ceph osd pool create cephfs_metadata 32
+pool 'cephfs_metadata' created
+```
+
+Create the file system from the pools
+
+```console
+[vagrant@ceph-admin test-cluster]$ ceph fs new cephfs_test cephfs_metadata cephfs_data
+new fs with metadata pool 3 and data pool 2
+```
+
+Create a secret file by copying the key from the keyring file into its own secret file
+
+```console
+[vagrant@ceph-admin test-cluster]$ cat ceph.client.admin.keyring
+[client.admin]
+	key = AQCj2YpRiAe6CxAA7/ETt7Hcl9IyxyYciVs47w==
+	caps mds = "allow *"
+	caps mgr = "allow *"
+	caps mon = "allow *"
+	caps osd = "allow *"
+```
+Paste the key into an empty file. It should look something like this
+```
+AQCj2YpRiAe6CxAA7/ETt7Hcl9IyxyYciVs47w==
+```
+
+Make sure nobody else can read the file
+```
+chmod 600 admin.secret
+```
+
+Copy the file to the client node:
+```console
+[vagrant@ceph-admin test-cluster]$ scp admin.secret ceph-client:
+admin.secret                                                                                                       100%   41    15.7KB/s   00:00
+```
+
+On the client node create a mount point and mount the file system:
+
+```console
+[vagrant@ceph-client ~]$ sudo mkdir /mnt/mycephfs
+[vagrant@ceph-client ~]$ sudo mount -t ceph ceph-server-1:6789:/ /mnt/mycephfs -o name=admin,secretfile=admin.secret
+```
 
 ### Store a blob object
 
