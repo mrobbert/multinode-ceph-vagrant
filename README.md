@@ -76,7 +76,10 @@ Let's prepare the machines:
 vagrant@ceph-admin:~/test-cluster$ ceph-deploy new ceph-server-1 ceph-server-2 ceph-server-3
 ```
 
-Now, we have to change a default setting. For our initial cluster, we are only going to have two [object storage daemons](http://docs.ceph.com/docs/master/architecture/#the-ceph-storage-cluster). We need to tell Ceph to allow us to achieve an `active + clean` state with just two Ceph OSDs. Add `osd pool default size = 2` to `./ceph.conf`.
+Now, we have to change a default setting. For our initial cluster, we are only going to have two [object storage daemons](http://docs.ceph.com/docs/master/architecture/#the-ceph-storage-cluster). We need to tell Ceph to allow us to achieve an `active + clean` state with just two Ceph OSDs. Add the following to `ceph.conf`:
+```
+osd pool default size = 2
+```
 
 Because we're dealing with multiple VMs sharing the same host, we can expect to see more clock skew. We can tell Ceph that we'd like to tolerate slightly more clock skew by adding the following section to `ceph.conf`:
 ```
@@ -101,10 +104,10 @@ mon_clock_drift_allowed = 1
 
 We're finally ready to install!
 
-Note here that we specify the Ceph release we'd like to install, which is [luminous](http://docs.ceph.com/docs/master/releases/luminous/).
+Note here that we specify the Ceph release we'd like to install, which is [mimic](http://docs.ceph.com/docs/master/releases/mimic/).
 
 ```console
-vagrant@ceph-admin:~/test-cluster$ ceph-deploy install --release=luminous ceph-admin ceph-server-1 ceph-server-2 ceph-server-3 ceph-client
+vagrant@ceph-admin:~/test-cluster$ ceph-deploy install --release=mimic ceph-admin ceph-server-1 ceph-server-2 ceph-server-3 ceph-client
 ```
 
 ## Configure monitor and OSD services
